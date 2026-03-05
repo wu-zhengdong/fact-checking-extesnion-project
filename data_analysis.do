@@ -30,6 +30,39 @@ foreach var of varlist score1 score2 score3 score4 score5 score6 score7 {
   xtgee `var' treatment time did, family(gaussian) link(identity) corr(exchangeable) vce(robust)
 }
 
+* Calculate Cohen's d
+* Based on pooled SD at baseline (time==0)
+
+foreach var of varlist score3 score6 score7 {
+    
+    * Extract baseline SD for treatment group
+    quietly summarize `var' if treatment==1 & time==0
+    local sd1 = r(sd)
+    
+    * Extract baseline SD for control group
+    quietly summarize `var' if treatment==0 & time==0
+    local sd0 = r(sd)
+    
+    * Calculate pooled SD
+    local pooled_sd = sqrt((`sd1'^2 + `sd0'^2) / 2)
+    
+    * Extract coefficient of did from GEE model
+    quietly xtgee `var' treatment time did,family(gaussian) link(identity) corr(exchangeable) vce(robust)
+    local coef = _b[did]
+    
+    * Calculate Cohen's d
+    local cohens_d = `coef' / `pooled_sd'
+    
+    * Display results
+    display "================================"
+    display "Variable: `var'"
+    display "Treatment baseline SD: " `sd1'
+    display "Control baseline SD: " `sd0'
+    display "Pooled SD: " `pooled_sd'
+    display "Coefficient (did): " `coef'
+    display "Cohen's d: " `cohens_d'
+}
+
 ///////// Table 3 | Effects of a simulated fact-checking extension on parents' attitudes toward HPV vaccination
 
 foreach var of varlist conf_1_1_new conf_2_1_new willingness_1_new {
