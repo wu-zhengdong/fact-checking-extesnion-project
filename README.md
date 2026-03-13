@@ -1,1 +1,1 @@
-# fact-checking-extesnion-project
+# fact-checking-extension-project
